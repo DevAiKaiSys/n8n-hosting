@@ -1,0 +1,107 @@
+{
+  "name": "ocr-basic",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "PDF OCR Extraction",
+        "formDescription": "Please upload your PDF file for text extraction",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "data",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        160,
+        128
+      ],
+      "id": "4952e69d-78ad-42fb-9423-4f7162832c3c",
+      "name": "On form submission",
+      "webhookId": "08369b74-d384-447c-967e-ad57441be2ca"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        368,
+        128
+      ],
+      "id": "3c97b8cc-ca8a-4d06-9457-638fcd8e1f0e",
+      "name": "Transform to base"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\":[\n      {\"text\": \"Extract ALL the information and text on the invoice from this PDF and output it without any additional text. Also extract text on images!\"},\n      {\n        \"inline_data\": {\n          \"mime_type\": \"application/pdf\",\n          \"data\": \"{{ $json.data }}\"\n        }\n      }\n    ]\n  }]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        128
+      ],
+      "id": "57dd6704-b74c-4273-a370-ef2903bf6e6b",
+      "name": "Extract PDF Content Using Gemini Vision",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "4XALcwRDu7IDlLBI",
+          "name": "Query Auth account Gemini"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Transform to base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform to base": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Content Using Gemini Vision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4b5c6ae6-4b08-4eea-a066-a24ee32da9aa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "faea0130dc65b363ba0d543aa92b861107d41209614495092ad3a12efe581f33"
+  },
+  "id": "Ck64S11ZF3Go2rTH",
+  "tags": []
+}

@@ -34,6 +34,9 @@ services:
       - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
       - DB_POSTGRESDB_USER=${POSTGRES_NON_ROOT_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_NON_ROOT_PASSWORD}
+
+      - WEBHOOK_URL=${WEBHOOK_URL}          # สำหรับ webhook และ execution URL
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL}  # สำหรับ UI / editor
     ports:
       - 5678:5678
     links:
