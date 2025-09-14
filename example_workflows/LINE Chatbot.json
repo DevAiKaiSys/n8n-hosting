@@ -1,0 +1,201 @@
+{
+  "name": "LINE Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f55e70dd-9094-48b5-8bb1-0d068750a510",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b333eb90-31bb-43f5-b604-546b548de7a6",
+      "name": "Webhook",
+      "webhookId": "f55e70dd-9094-48b5-8bb1-0d068750a510"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8231a2c5-fb84-47e1-9aae-e104aa5e1b9c",
+              "name": "body.events[0].message",
+              "value": "={{ $json.body.events[0].message }}",
+              "type": "object"
+            },
+            {
+              "id": "297cb7fd-eb85-4b03-832c-d3a6a6fdec20",
+              "name": "body.events[0].replyToken",
+              "value": "={{ $json.body.events[0].replyToken }}",
+              "type": "string"
+            },
+            {
+              "id": "77398ef4-e9cb-4016-9cc1-a5f9f858a41e",
+              "name": "sessionId",
+              "value": "={{ $json.body.events[0].message.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a4726071-dd29-4016-bc7d-4905e14135cd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.events[0].message.text }}",
+        "options": {
+          "systemMessage": "=You are a helpful assistant\n\n# Session\n{{ $json.sessionId }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "eed7845d-c2f8-46ec-b8da-7e5e3a8b1bec",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "gemma3:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "b3bedc3b-00f1-4fc2-9c09-65f0e70376f3",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "vvsGJVMScWvdfojO",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/reply",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  JSON.stringify({\n    replyToken: $('Webhook').item.json.body.events[0].replyToken,\n    messages: [\n      {\n        type: \"text\",\n        text: typeof $json.output === 'string' \n          ? $json.output.trim()\n          : JSON.stringify($json.output)\n      }\n    ]\n  })\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "244ad5ae-ff51-4e80-95ec-9d6b28b522dc",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "2A5fD0pL0dX3OZM9",
+          "name": "Bearer Auth account LINE"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 200
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        208
+      ],
+      "id": "6cf0f80c-00e1-4977-82d1-a1ae3580531b",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2db41298-b781-4e68-959f-2b1e7ee6c0ca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "faea0130dc65b363ba0d543aa92b861107d41209614495092ad3a12efe581f33"
+  },
+  "id": "zrQS5mmdvdPyILEs",
+  "tags": []
+}
